@@ -1247,9 +1247,13 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return ret;
 	}
 
-    private boolean isURIAccessAllowed(String userName, FsAction action, String uri, HiveConf conf) {
-        boolean ret = false;
+	private boolean isURIAccessAllowed(String userName, FsAction action, String uri, HiveConf conf) {
+		return isURIAccessAllowed( userName,  action,  uri,  conf, RangerHivePlugin.URIPermissionCoarseCheck);
+	}
 
+    private boolean isURIAccessAllowed(String userName, FsAction action, String uri, HiveConf conf, boolean coarseCheck) {
+        boolean ret = false;
+		boolean recurse = !coarseCheck;
         if(action == FsAction.NONE) {
             ret = true;
         } else {
@@ -1262,8 +1266,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
                     boolean isDenied = false;
 
                     for(FileStatus file : filestat) {
-                        if (FileUtils.isOwnerOfFileHierarchy(fs, file, userName) ||
-							FileUtils.isActionPermittedForFileHierarchy(fs, file, userName, action)) {
+                        if (FileUtils.isOwnerOfFileHierarchy(fs, file, userName,recurse) ||
+							FileUtils.isActionPermittedForFileHierarchy(fs, file, userName, action,recurse)) {
 								continue;
 						} else {
 							isDenied = true;
@@ -1706,6 +1710,9 @@ enum HiveObjectType { NONE, DATABASE, TABLE, VIEW, PARTITION, INDEX, COLUMN, FUN
 enum HiveAccessType { NONE, CREATE, ALTER, DROP, INDEX, LOCK, SELECT, UPDATE, USE, READ, WRITE, ALL, ADMIN };
 
 class RangerHivePlugin extends RangerBasePlugin {
+
+	public static boolean URIPermissionCoarseCheck = RangerHadoopConstants.HIVE_URI_PERMISSION_COARSE_CHECK_DEFAULT_VALUE;
+
 	public static boolean UpdateXaPoliciesOnGrantRevoke = RangerHadoopConstants.HIVE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE;
 	public static boolean BlockUpdateIfRowfilterColumnMaskSpecified = RangerHadoopConstants.HIVE_BLOCK_UPDATE_IF_ROWFILTER_COLUMNMASK_SPECIFIED_DEFAULT_VALUE;
 	public static String DescribeShowTableAuth = RangerHadoopConstants.HIVE_DESCRIBE_TABLE_SHOW_COLUMNS_AUTH_OPTION_PROP_DEFAULT_VALUE;
@@ -1722,7 +1729,7 @@ class RangerHivePlugin extends RangerBasePlugin {
 	@Override
 	public void init() {
 		super.init();
-
+		RangerHivePlugin.URIPermissionCoarseCheck = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.HIVE_URI_PERMISSION_COARSE_CHECK, RangerHadoopConstants.HIVE_URI_PERMISSION_COARSE_CHECK_DEFAULT_VALUE);
 		RangerHivePlugin.UpdateXaPoliciesOnGrantRevoke = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.HIVE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_PROP, RangerHadoopConstants.HIVE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE);
 		RangerHivePlugin.BlockUpdateIfRowfilterColumnMaskSpecified = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.HIVE_BLOCK_UPDATE_IF_ROWFILTER_COLUMNMASK_SPECIFIED_PROP, RangerHadoopConstants.HIVE_BLOCK_UPDATE_IF_ROWFILTER_COLUMNMASK_SPECIFIED_DEFAULT_VALUE);
 		RangerHivePlugin.DescribeShowTableAuth = RangerConfiguration.getInstance().get(RangerHadoopConstants.HIVE_DESCRIBE_TABLE_SHOW_COLUMNS_AUTH_OPTION_PROP, RangerHadoopConstants.HIVE_DESCRIBE_TABLE_SHOW_COLUMNS_AUTH_OPTION_PROP_DEFAULT_VALUE);

@@ -50,6 +50,9 @@ public class RangerHadoopConstants {
 	public static final String  RANGER_ADD_YARN_PERMISSION_PROP    = "ranger.add-yarn-authorization";
 	public static final boolean RANGER_ADD_YARN_PERMISSION_DEFAULT = true;
 
+	public static final String  HIVE_URI_PERMISSION_COARSE_CHECK = "xasecure.hive.uri.permission.coarse.check";
+	public static final boolean HIVE_URI_PERMISSION_COARSE_CHECK_DEFAULT_VALUE = false;
+
 	//
 	// Logging constants
 	//
